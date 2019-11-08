@@ -122,6 +122,8 @@ class SimpleGrammar:
         for s in text:
             if s == '#':
                 if inside_tag:
+                    # TODO: Fix error caused by isolated #
+                    # print("%s %s" % (tag_number, tag_list))
                     current_text = current_text + tag_list[tag_number]
                     tag_number = tag_number + 1
                 inside_tag = not inside_tag
@@ -145,6 +147,10 @@ class SimpleGrammar:
                 current_tag = ''
                 inside_tag = not inside_tag
             elif inside_tag:
-                current_tag = current_tag + s
+                if s == '\n' or s == ' ':
+                    inside_tag = False
+                    current_tag = ''
+                else:
+                    current_tag = current_tag + s
 
         return found_tags
