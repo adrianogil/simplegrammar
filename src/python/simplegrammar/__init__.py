@@ -1,2 +1,2 @@
 
-from . import SimpleGrammar
+from .grammar import SimpleGrammar

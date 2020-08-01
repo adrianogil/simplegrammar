@@ -78,6 +78,18 @@ class SimpleGrammar:
 
         return text_evaluated
 
+    def parse(self, data):
+        # print("[Debug] SimpleGrammar.parse - parsing grammar: %s" % (data,), debug=True)
+
+        if data.__class__ == dict:
+            return self.parse_dict(data)
+
+    def parse_dict(self, dict_data):
+        # print("[Debug] SimpleGrammar.parse_dict - parsing grammar: %s" % (dict_data,), debug=True)
+        for key in dict_data:
+            self.add_tag(key, dict_data[key])
+        return self.evaluate("#text#")
+
     def evaluate_taglist(self, tag_list):
         tags_evaluated = []
 
