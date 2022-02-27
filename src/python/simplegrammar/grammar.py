@@ -3,21 +3,11 @@
 from random import randint
 
 
-def opposite_direction(d):
-    if d == 'north':
-        return 'south'
-    elif d == 'south':
-        return 'north'
-    elif d == 'west':
-        return 'east'
-    return 'west'
-
-
 def capitalize(s):
     return s[0].upper() + s[1:]
 
 
-def is_int(s):
+def is_integer(s):
     try:
         int(s)
         return True
@@ -27,7 +17,7 @@ def is_int(s):
     return False
 
 
-def get_random(l):
+def get_random_element(l):
     '''
         list l
     '''
@@ -35,6 +25,9 @@ def get_random(l):
 
 
 class SimpleGrammar:
+    """
+        Class for handling text generation
+    """
     def __init__(self):
         self.reset_tags()
 
@@ -57,19 +50,15 @@ class SimpleGrammar:
         self.static_tags = {}
         self.text_functions = {}
 
-        def capitalize(text):
-            # print("debug: Trying to capitalize - " + str(text))
-            new_text = text[0].upper() + text[1:]
-
-            return new_text
-
         self.text_functions['capitalize'] = capitalize
 
     def add_tag(self, tag, expression):
+        # printme('[Debug] [txtgamelib.grammar.simplegrammar] SimpleGrammar:add_tag -' + ' tag - ' + str(tag) + ' expression - ' + str(expression), debug=True)
         self.tags[tag] = expression
         return self
 
     def evaluate(self, text):
+        # printme('[txtgamelib.grammar.simplegrammar] SimpleGrammar:evaluate -' + ' text - ' + str(text), debug=True)
         found_tags = self.parse_tags_from(text)
 
         tags_evaluated = self.evaluate_taglist(found_tags)
@@ -78,17 +67,24 @@ class SimpleGrammar:
 
         return text_evaluated
 
-    def parse(self, data):
-        # print("[Debug] SimpleGrammar.parse - parsing grammar: %s" % (data,), debug=True)
+    def parse(self, data=None, target_tag='text'):
+        if data is None:
+            # Method is used staticcaly
+            data = self
+            grammar = SimpleGrammar()
+            return grammar.parse(data, target_tag=target_tag)
+
+        # printme("[Debug] SimpleGrammar.parse - parsing grammar: %s" % (data,), debug=True)
 
         if data.__class__ == dict:
-            return self.parse_dict(data)
+            return self.parse_dict(data, target_tag=target_tag)
 
-    def parse_dict(self, dict_data):
-        # print("[Debug] SimpleGrammar.parse_dict - parsing grammar: %s" % (dict_data,), debug=True)
+    def parse_dict(self, dict_data, target_tag='text'):
+
+        # printme("[Debug] SimpleGrammar.parse_dict - parsing grammar: %s" % (dict_data,), debug=True)
         for key in dict_data:
             self.add_tag(key, dict_data[key])
-        return self.evaluate("#text#")
+        return self.evaluate("#%s#" % (target_tag,))
 
     def evaluate_taglist(self, tag_list):
         tags_evaluated = []
@@ -96,18 +92,18 @@ class SimpleGrammar:
         for t in tag_list:
             if '.' in t:
                 real_tag = ''
-                for i in range(0, len(t)-1):
+                for i in range(0, len(t) - 1):
                     s = t[i]
                     if s == '.':
                         prefix_tag = t[:i]
-                        real_tag = t[i+1:]
+                        real_tag = t[i + 1:]
                         # print("debug: real_tag: " + real_tag)
                         # print("debug: prefix_tag: " + prefix_tag)
                         break
-                if is_int(prefix_tag):
-                    if not t in self.static_tags:
+                if is_integer(prefix_tag):
+                    if t not in self.static_tags:
                         if real_tag in self.tags:
-                            self.static_tags[t] = self.evaluate(get_random(self.tags[real_tag]))
+                            self.static_tags[t] = self.evaluate(get_random_element(self.tags[real_tag]))
                     if t in self.static_tags:
                         tags_evaluated.append(self.static_tags[t])
                 elif prefix_tag in self.text_functions:
@@ -115,7 +111,7 @@ class SimpleGrammar:
                     tags_evaluated.append(self.text_functions[prefix_tag](real_tag))
             elif t in self.tags:
                 # print(t)
-                tagged_text = get_random(self.tags[t])
+                tagged_text = get_random_element(self.tags[t])
                 tags_evaluated.append(self.evaluate(tagged_text))
 
         return tags_evaluated
