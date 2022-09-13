@@ -1,2 +1,2 @@
 # simplegrammar
-Text generation based on a simple grammar
+Python Library for Text generation based in a simple grammar
