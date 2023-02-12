@@ -53,11 +53,11 @@ class SimpleGrammar:
         self.text_functions['capitalize'] = capitalize
 
     def add_tag(self, tag, expression):
-    """
-        self.add_tag(tag='tag-name', expression=['expression_term1', 'expression_term2']) -> self
+        """
+            self.add_tag(tag='tag-name', expression=['expression_term1', 'expression_term2']) -> self
 
-        register tag as expression
-    """
+            register tag as expression
+        """
         # printme('[Debug] [txtgamelib.grammar.simplegrammar] SimpleGrammar:add_tag -' + ' tag - ' + str(tag) + ' expression - ' + str(expression), debug=True)
         self.tags[tag] = expression
         return self
@@ -80,6 +80,9 @@ class SimpleGrammar:
             return grammar.parse(data, target_tag=target_tag)
 
         # printme("[Debug] SimpleGrammar.parse - parsing grammar: %s" % (data,), debug=True)
+
+        if data.__class__ == list:
+            data = {"text": data}
 
         if data.__class__ == dict:
             return self.parse_dict(data, target_tag=target_tag)
