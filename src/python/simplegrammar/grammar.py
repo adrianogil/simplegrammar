@@ -74,7 +74,7 @@ class SimpleGrammar:
 
     def parse(self, data=None, target_tag='text'):
         if data is None:
-            # Method is used staticcaly
+            # Method is used statically
             data = self
             grammar = SimpleGrammar()
             return grammar.parse(data, target_tag=target_tag)

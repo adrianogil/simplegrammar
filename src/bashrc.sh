@@ -4,4 +4,13 @@ then
     export PYTHONPATH=$SIMPLEGRAMMAR_PYTHON_PATH:$PYTHONPATH
 fi
 
-alias simple-grammar="python3 -m simplegrammar"
+
+function simple-grammar()
+{
+    target_input=$1
+    if [ -z "$target_input" ]
+    then
+        target_input=$(f "*.json" | default-fuzzy-finder)
+    fi
+    python3 -m simplegrammar ${target_input}
+}
