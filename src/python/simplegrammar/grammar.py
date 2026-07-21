@@ -24,6 +24,10 @@ def get_random_element(l):
     return l[randint(0, len(l) - 1)]
 
 
+def unresolved_tag_error(tag):
+    return ValueError("Unresolved grammar tag: #%s#" % (tag,))
+
+
 class SimpleGrammar:
     """
         Class for handling text generation
@@ -112,15 +116,23 @@ class SimpleGrammar:
                     if t not in self.static_tags:
                         if real_tag in self.tags:
                             self.static_tags[t] = self.evaluate(get_random_element(self.tags[real_tag]))
+                        else:
+                            raise unresolved_tag_error(real_tag)
                     if t in self.static_tags:
                         tags_evaluated.append(self.static_tags[t])
                 elif prefix_tag in self.text_functions:
+                    if real_tag not in self.tags:
+                        raise unresolved_tag_error(real_tag)
                     real_tag = self.evaluate("#" + real_tag + "#")
                     tags_evaluated.append(self.text_functions[prefix_tag](real_tag))
+                else:
+                    raise unresolved_tag_error(t)
             elif t in self.tags:
                 # print(t)
                 tagged_text = get_random_element(self.tags[t])
                 tags_evaluated.append(self.evaluate(tagged_text))
+            else:
+                raise unresolved_tag_error(t)
 
         return tags_evaluated
 

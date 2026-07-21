@@ -66,6 +66,41 @@ class SimpleGrammarTest(unittest.TestCase):
 
         self.assertEqual(grammar.parse_tags_from("#bad tag# #ok# #bad\nagain#"), ["ok"])
 
+    def test_evaluate_rejects_unresolved_direct_tag(self):
+        grammar = SimpleGrammar().st("Hello #name#")
+
+        with self.assertRaisesRegex(ValueError, "Unresolved grammar tag: #name#"):
+            str(grammar)
+
+    def test_parse_dict_rejects_unresolved_nested_tag(self):
+        grammar = {
+            "text": ["#greeting#"],
+            "greeting": ["Hello #name#"],
+        }
+
+        with self.assertRaisesRegex(ValueError, "Unresolved grammar tag: #name#"):
+            SimpleGrammar.parse(grammar)
+
+    def test_text_function_rejects_unresolved_tag_argument(self):
+        grammar = {
+            "text": ["#capitalize.name#"],
+        }
+
+        with self.assertRaisesRegex(ValueError, "Unresolved grammar tag: #name#"):
+            SimpleGrammar.parse(grammar)
+
+    def test_static_tag_rejects_unresolved_tag_argument(self):
+        grammar = SimpleGrammar().st("#1.name#")
+
+        with self.assertRaisesRegex(ValueError, "Unresolved grammar tag: #name#"):
+            str(grammar)
+
+    def test_dotted_tag_with_unknown_prefix_is_rejected(self):
+        grammar = SimpleGrammar().st("#unknown.name#").at("name", ["Ada"])
+
+        with self.assertRaisesRegex(ValueError, "Unresolved grammar tag: #unknown.name#"):
+            str(grammar)
+
     def test_reset_tags_clears_tags_and_static_cache(self):
         grammar = SimpleGrammar().st("#1.name#").at("name", ["Ada"])
         self.assertEqual(str(grammar), "Ada")
