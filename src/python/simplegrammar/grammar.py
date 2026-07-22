@@ -1,5 +1,6 @@
 """ Main class for text generation """
 
+from random import Random
 from random import randint
 
 
@@ -17,10 +18,13 @@ def is_integer(s):
     return False
 
 
-def get_random_element(l):
+def get_random_element(l, random_generator=None):
     '''
         list l
     '''
+    if random_generator is not None:
+        return l[random_generator.randint(0, len(l) - 1)]
+
     return l[randint(0, len(l) - 1)]
 
 
@@ -32,8 +36,15 @@ class SimpleGrammar:
     """
         Class for handling text generation
     """
-    def __init__(self):
+    def __init__(self, seed=None):
+        self.set_seed(seed)
         self.reset_tags()
+
+    def set_seed(self, seed=None):
+        self.seed = seed
+        self.random_generator = Random(seed) if seed is not None else None
+
+        return self
 
     def st(self, text):
         return self.set_text(text)
@@ -76,14 +87,18 @@ class SimpleGrammar:
 
         return text_evaluated
 
-    def parse(self, data=None, target_tag='text'):
+    def parse(self, data=None, target_tag='text', seed=None):
         if data is None:
             # Method is used statically
             data = self
-            grammar = SimpleGrammar()
+            grammar = SimpleGrammar(seed=seed)
             return grammar.parse(data, target_tag=target_tag)
 
         # printme("[Debug] SimpleGrammar.parse - parsing grammar: %s" % (data,), debug=True)
+
+        if seed is not None:
+            self.set_seed(seed)
+            self.static_tags = {}
 
         if data.__class__ == list:
             data = {"text": data}
@@ -115,7 +130,9 @@ class SimpleGrammar:
                 if is_integer(prefix_tag):
                     if t not in self.static_tags:
                         if real_tag in self.tags:
-                            self.static_tags[t] = self.evaluate(get_random_element(self.tags[real_tag]))
+                            self.static_tags[t] = self.evaluate(
+                                get_random_element(self.tags[real_tag], self.random_generator)
+                            )
                         else:
                             raise unresolved_tag_error(real_tag)
                     if t in self.static_tags:
@@ -129,7 +146,7 @@ class SimpleGrammar:
                     raise unresolved_tag_error(t)
             elif t in self.tags:
                 # print(t)
-                tagged_text = get_random_element(self.tags[t])
+                tagged_text = get_random_element(self.tags[t], self.random_generator)
                 tags_evaluated.append(self.evaluate(tagged_text))
             else:
                 raise unresolved_tag_error(t)

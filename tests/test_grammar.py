@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from simplegrammar import SimpleGrammar
+from simplegrammar import __main__ as simplegrammar_cli
 
 
 class SimpleGrammarTest(unittest.TestCase):
@@ -52,6 +53,42 @@ class SimpleGrammarTest(unittest.TestCase):
 
         with patch("simplegrammar.grammar.randint", side_effect=[0, 1]):
             self.assertEqual(str(grammar), "Ada Ada Grace")
+
+    def test_seeded_parse_is_deterministic(self):
+        grammar = {
+            "text": ["#greeting#, #name#! #emoji#"],
+            "greeting": ["Hello", "Hi", "Bonjour"],
+            "name": ["Ada", "Grace", "Linus"],
+            "emoji": [":)", ":D", "<3"],
+        }
+
+        first_output = SimpleGrammar.parse(grammar, seed="daily")
+        second_output = SimpleGrammar.parse(grammar, seed="daily")
+
+        self.assertEqual(first_output, second_output)
+
+    def test_seeded_instances_are_deterministic(self):
+        first_grammar = SimpleGrammar(seed="story").st("#hero# finds #treasure#")
+        first_grammar.at("hero", ["Ada", "Grace", "Linus"])
+        first_grammar.at("treasure", ["a map", "a key", "a shell"])
+
+        second_grammar = SimpleGrammar(seed="story").st("#hero# finds #treasure#")
+        second_grammar.at("hero", ["Ada", "Grace", "Linus"])
+        second_grammar.at("treasure", ["a map", "a key", "a shell"])
+
+        self.assertEqual(str(first_grammar), str(second_grammar))
+
+    def test_parse_seed_resets_existing_generator_state(self):
+        grammar = {
+            "text": ["#name# #name#"],
+            "name": ["Ada", "Grace", "Linus"],
+        }
+        generator = SimpleGrammar()
+
+        self.assertEqual(
+            generator.parse(grammar, seed="stable"),
+            generator.parse(grammar, seed="stable"),
+        )
 
     def test_parse_tags_from_finds_hash_delimited_tags(self):
         grammar = SimpleGrammar()
@@ -110,6 +147,21 @@ class SimpleGrammarTest(unittest.TestCase):
         self.assertEqual(grammar.tags, {})
         self.assertEqual(grammar.static_tags, {})
         self.assertIn("capitalize", grammar.text_functions)
+
+    def test_cli_accepts_seeded_generation(self):
+        grammar = '{"text":["#name#"],"name":["Ada","Grace","Linus"]}'
+
+        with patch("builtins.print") as print_mock:
+            exit_code = simplegrammar_cli.main([grammar, "--seed", "cli"])
+        first_output = print_mock.call_args.args[0]
+
+        with patch("builtins.print") as print_mock:
+            second_exit_code = simplegrammar_cli.main([grammar, "--seed", "cli"])
+        second_output = print_mock.call_args.args[0]
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(second_exit_code, 0)
+        self.assertEqual(first_output, second_output)
 
 
 if __name__ == "__main__":
